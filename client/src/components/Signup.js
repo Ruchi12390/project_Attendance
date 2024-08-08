@@ -15,7 +15,7 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-import { config } from '../config/config.js'; // Ensure correct import path
+ // Ensure correct import path
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -92,16 +92,16 @@ export default function Signup() {
                 break;
             case 'email':
                 if (!input.match(regex.email)) {
-                    setErrorText({ ...errorText, [name]: 'Invalid Email Id' });
+                    setErrorText({ ...errorText, email: 'Invalid Email' });
                 } else {
-                    setErrorText({ ...errorText, [name]: '' });
+                    setErrorText({ ...errorText, email: '' });
                 }
                 break;
             case 'password':
                 if (!input.match(regex.password)) {
-                    setErrorText({ ...errorText, [name]: 'Password must be Alphanumeric, Min. Length 6' });
+                    setErrorText({ ...errorText, password: 'Password must be at least 6 characters and include at least one number' });
                 } else {
-                    setErrorText({ ...errorText, [name]: '' });
+                    setErrorText({ ...errorText, password: '' });
                 }
                 break;
             default:
@@ -109,68 +109,39 @@ export default function Signup() {
         }
     };
 
-    const handleChange = name => event => {
-        setValues({ ...values, [name]: event.target.value });
-        validateInput(name, event.target.value);
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        validateInput(name, value);
+        setValues({ ...values, [name]: value });
     };
 
-    const handleRoleChange = event => {
-        setValues({ ...values, role: event.target.value });
-    };
-
-    const goto = (res, user) => {
-        if (res.status === 200) {
-            history.push("/login", user);
-        }
-    };
-
-    const create = async (user) => {
-        try {
-            let response = await fetch(`${config.REACT_APP_API_URL}/api/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(user)
-            });
-
-            if (!response.ok) {
-                const errorDetails = await response.text(); // Capture error details
-                throw new Error(`HTTP error! status: ${response.status}, details: ${errorDetails}`);
-            }
-
-            let res = await response.json();
-            goto(response, res.user);
-            return response;
-        } catch (err) {
-            console.error('Error during signup:', err);
-            setValues({ ...values, error: err.message });
-        }
-    };
-
-    const clickSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        const user = {
-            firstName: values.firstName.trim(),
-            lastName: values.lastName.trim(),
-            email: values.email.trim(),
-            password: values.password.trim(),
-            role: values.role
-        };
-
-        create(user).then((data) => {
-            if (data && data.error) {
-                setValues({ ...values, error: data.error });
+    
+        if (!values.firstName || !values.lastName || !values.email || !values.password) {
+            setErrorText({ ...errorText, global: 'All fields are required' });
+            return;
+        }
+    
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(values)
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                history.push('/login');
             } else {
-                setValues({ ...values, error: '', open: true });
+                setValues({ ...values, error: data.error });
             }
-        });
+        } catch (error) {
+            setValues({ ...values, error: 'An error occurred' });
+        }
     };
-
-    const isFormValid = () => {
-        return !errorText.firstName && !errorText.lastName && !errorText.email && !errorText.password &&
-               values.firstName.trim() && values.lastName.trim() && values.email.trim() && values.password.trim();
-    };
+    
 
     return (
         <Container component="main" maxWidth="xs">
@@ -180,25 +151,26 @@ export default function Signup() {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                    Sign up
+                    Sign Up
                 </Typography>
-                <form className={classes.form} noValidate>
+                {values.error && <Alert severity="error" className={classes.alert}>{values.error}</Alert>}
+                <form className={classes.form} noValidate onSubmit={handleSubmit}>
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
                             <TextField
-                                autoComplete="firstName"
+                                autoComplete="fname"
                                 name="firstName"
                                 variant="outlined"
                                 required
                                 fullWidth
                                 id="firstName"
-                                onChange={handleChange('firstName')}
-                                value={values.firstName}
                                 label="First Name"
-                                error={!!errorText.firstName}
                                 autoFocus
+                                value={values.firstName}
+                                onChange={handleInputChange}
+                                error={!!errorText.firstName}
+                                helperText={errorText.firstName}
                             />
-                            {errorText.firstName && <Alert className={classes.alert} severity="error">{errorText.firstName}</Alert>}
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <TextField
@@ -206,14 +178,14 @@ export default function Signup() {
                                 required
                                 fullWidth
                                 id="lastName"
-                                onChange={handleChange('lastName')}
-                                value={values.lastName}
                                 label="Last Name"
                                 name="lastName"
-                                autoComplete="lastName"
+                                autoComplete="lname"
+                                value={values.lastName}
+                                onChange={handleInputChange}
                                 error={!!errorText.lastName}
+                                helperText={errorText.lastName}
                             />
-                            {errorText.lastName && <Alert className={classes.alert} severity="error">{errorText.lastName}</Alert>}
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
@@ -221,14 +193,14 @@ export default function Signup() {
                                 required
                                 fullWidth
                                 id="email"
-                                onChange={handleChange('email')}
-                                value={values.email}
                                 label="Email Address"
                                 name="email"
                                 autoComplete="email"
+                                value={values.email}
+                                onChange={handleInputChange}
                                 error={!!errorText.email}
+                                helperText={errorText.email}
                             />
-                            {errorText.email && <Alert className={classes.alert} severity="error">{errorText.email}</Alert>}
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
@@ -239,26 +211,26 @@ export default function Signup() {
                                 label="Password"
                                 type="password"
                                 id="password"
-                                onChange={handleChange('password')}
-                                value={values.password}
                                 autoComplete="current-password"
+                                value={values.password}
+                                onChange={handleInputChange}
                                 error={!!errorText.password}
+                                helperText={errorText.password}
                             />
-                            {errorText.password && <Alert className={classes.alert} severity="error">{errorText.password}</Alert>}
                         </Grid>
                         <Grid item xs={12}>
                             <FormControl variant="outlined" className={classes.formControl} fullWidth>
                                 <InputLabel id="role-label">Role</InputLabel>
                                 <Select
                                     labelId="role-label"
-                                    id="role-select"
+                                    id="role"
+                                    name="role"
                                     value={values.role}
-                                    onChange={handleRoleChange}
+                                    onChange={handleInputChange}
                                     label="Role"
                                 >
                                     <MenuItem value="student">Student</MenuItem>
                                     <MenuItem value="teacher">Teacher</MenuItem>
-                                    <MenuItem value="admin">Admin</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
@@ -267,20 +239,18 @@ export default function Signup() {
                         type="submit"
                         fullWidth
                         variant="contained"
+                        color="primary"
                         className={classes.submit}
-                        disabled={!isFormValid()}
-                        onClick={clickSubmit}
                     >
                         Sign Up
                     </Button>
-                    <Grid container justify="flex-end">
+                    <Grid container justifyContent="flex-end">
                         <Grid item>
                             <Link href="/login" variant="body2">
                                 Already have an account? Sign in
                             </Link>
                         </Grid>
                     </Grid>
-                    {values.error && <Alert severity="error">{values.error}</Alert>}
                 </form>
             </div>
         </Container>

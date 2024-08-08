@@ -15,7 +15,6 @@ import { useHistory } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { loginCheck } from '../redux/actionCreators';
 import Alert from '@material-ui/lab/Alert';
-import RoleSelectionDialog from './RoleSelectionDialog'; // Ensure correct path
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -51,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const Login = (props) => {
+const Login = ({ loginCheck, error }) => {
     const classes = useStyles();
     const history = useHistory();
 
@@ -65,26 +64,25 @@ const Login = (props) => {
         password: ''
     });
 
-    const [openDialog, setOpenDialog] = useState(false);
-    const [selectedRole, setSelectedRole] = useState('');
-
     const regex = {
         email: /^([a-z0-9_\.\+-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/i,
-        password: /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[\W_]).{6,}$/
+        password: /^[A-Za-z\d\W_]{6,}$/,
     };
 
     const validateInput = (name, input) => {
         if (name === 'email') {
-            if (!input.match(regex.email))
-                setErrorText({ ...errorText, [name]: 'Invalid Email Id' });
-            else
-                setErrorText({ ...errorText, [name]: '' });
+            if (!input.match(regex.email)) {
+                setErrorText(prevState => ({ ...prevState, [name]: 'Invalid Email Id' }));
+            } else {
+                setErrorText(prevState => ({ ...prevState, [name]: '' }));
+            }
         }
         if (name === 'password') {
-            if (!input.match(regex.password))
-                setErrorText({ ...errorText, [name]: 'Password must be Alphanumeric with Special Character, Min. Length 6' });
-            else
-                setErrorText({ ...errorText, [name]: '' });
+            if (!regex.password.test(input)) {
+                setErrorText(prevState => ({ ...prevState, [name]: 'Password must be Alphanumeric with Special Character, Min. Length 6' }));
+            } else {
+                setErrorText(prevState => ({ ...prevState, [name]: '' }));
+            }
         }
     };
 
@@ -100,21 +98,10 @@ const Login = (props) => {
             password: values.password || undefined
         };
 
-        props.loginCheck(user, function (token) {
+        loginCheck(user, (token) => {
             localStorage.setItem('token', token);
-            // Open the role selection dialog after successful login
-            setOpenDialog(true);
+            history.push('/dashboard'); // Adjust redirection as needed
         });
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
-
-    const handleRoleSelect = (role) => {
-        setSelectedRole(role);
-        // Redirect or take action based on the selected role
-        history.push(`/${role}/dashboard`); // Example redirection
     };
 
     return (
@@ -160,9 +147,8 @@ const Login = (props) => {
                             autoComplete="current-password"
                             error={!!errorText.password}
                         />
-                        {errorText.email && <Alert className={classes.alert} severity="error">{errorText.email}</Alert>}
                         {errorText.password && <Alert className={classes.alert} severity="error">{errorText.password}</Alert>}
-                        {props.error && <Alert className={classes.alert} severity="error">{props.error}</Alert>}
+                        {error && <Alert className={classes.alert} severity="error">{error}</Alert>}
                         <FormControlLabel
                             control={<Checkbox value="remember" color="primary" />}
                             label="Remember me"
@@ -185,7 +171,7 @@ const Login = (props) => {
                                 </Link>
                             </Grid>
                             <Grid item>
-                                <Link to="/signup" variant="body2">
+                                <Link href="/signup" variant="body2">
                                     Don't have an account? Sign Up
                                 </Link>
                             </Grid>
@@ -193,25 +179,16 @@ const Login = (props) => {
                     </form>
                 </div>
             </Grid>
-            <RoleSelectionDialog
-                open={openDialog}
-                onClose={handleCloseDialog}
-                onSelectRole={handleRoleSelect}
-            />
         </Grid>
     );
 };
 
-const mapStateToProps = state => {
-    return {
-        resume: state.resume,
-        token: state.resume.token,
-        error: state.resume.error,
-    };
-};
+const mapStateToProps = state => ({
+    error: state.resume.error,
+});
 
 const mapDispatchToProps = dispatch => ({
-    loginCheck: (props, callback) => { dispatch(loginCheck(props, callback)); },
+    loginCheck: (user, callback) => dispatch(loginCheck(user, callback)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Login);

@@ -80,8 +80,8 @@ const Attendance = (props) => {
                 </Grid>
                 <Grid item xs={12}>
                     <TextField
-                        id="course"
-                        name="course"
+                        id="Date"
+                        name="Date"
                         label="Date"
                         fullWidth
                     />

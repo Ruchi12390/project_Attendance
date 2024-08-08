@@ -6,13 +6,13 @@ import Home from './components/Home';
 import Signup from './components/Signup';
 import Login from './components/Login';
 import Builder from './components/Builder';
-import Attendance from './components/Attendance.js';
-import Marks from './components/Marks.js';
+import Attendance from './components/Attendance';
+import Marks from './components/Marks';
 import Dashboard from './components/Dashboard';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import { connect } from 'react-redux';
-import { logInSuccess } from './redux/actionCreators';
+import { logInSuccess } from './redux/actionCreators'; // Ensure this path is correct
 import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(() => ({
@@ -27,17 +27,17 @@ const useStyles = makeStyles(() => ({
 }));
 
 const MainRouter = (props) => {
-
   const classes = useStyles();
-
   const storedJwt = localStorage.getItem('token');
 
   React.useEffect(() => {
-    if (storedJwt)
-      props.logInSuccess(storedJwt)
-  }, []) //eslint-disable-line
-
-
+    console.log('Stored JWT:', storedJwt);
+    if (storedJwt) {
+      props.logInSuccess(storedJwt);
+    }
+  }, [storedJwt, props]);
+  
+  
   return (
     <div className={classes.wrapper}>
       <NavBar />
@@ -63,11 +63,11 @@ const mapStateToProps = state => {
   return {
     resume: state.resume,
     token: state.resume.token
-  }
+  };
 }
 
 const mapDispatchToProps = dispatch => ({
-  logInSuccess: (props, callback) => { dispatch(logInSuccess(props)) },
+  logInSuccess: (token) => dispatch(logInSuccess(token)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(MainRouter);

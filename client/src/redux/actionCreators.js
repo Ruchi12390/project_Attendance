@@ -32,29 +32,33 @@ import {
     SET_PERSONAL_DETAILS,
     UPDATE_DATA
 } from './actionTypes'
+// redux/actionCreators.js
+import { LOGIN_SUCCESS, LOGIN_FAILURE } from './actionTypes';
 
-export const loginCheck = (user, callback) => {
-    return (dispatch) => {
-        dispatch(logInRequest())
-
-        axios({
-            url: `${config.REACT_APP_API_URL}/api/login`,
+export const loginCheck = (user, callback) => async dispatch => {
+    try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            data: JSON.stringify(user)
-        })
-            .then(response => {
-                const data = response.data
-                dispatch(logInSuccess(data.token))
-                callback(data.token)
-            })
-            .catch(error => {
-                dispatch(logInFailure(error.message))
-            })
+            body: JSON.stringify(user),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            dispatch({ type: LOGIN_SUCCESS, payload: data.token });
+            callback(data.token, data.role); // Ensure this callback does not cause a redirect
+        } else {
+            dispatch({ type: LOGIN_FAILURE, payload: data.error });
+        }
+    } catch (error) {
+        dispatch({ type: LOGIN_FAILURE, payload: 'An error occurred during login' });
     }
-}
+};
+
+
 
 export const logInRequest = () => {
     return {

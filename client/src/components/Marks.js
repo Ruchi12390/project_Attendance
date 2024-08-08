@@ -81,12 +81,24 @@ const Marks = (props) => {
                     />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField
-                        id="subjectCode"
-                        name="subjectCode"
-                        label="Subject Code"
-                        fullWidth
-                    />
+                <Select
+                        id="semester"
+                        name="semester"
+                        value={selectedType}
+                        onChange={handleTypeChange}
+                        className={classes.select}
+                        displayEmpty
+                    >
+                        <MenuItem value="" disabled>Select Semester</MenuItem>
+                        <MenuItem value="mst1">1</MenuItem>
+                        <MenuItem value="mst2">2</MenuItem>
+                        <MenuItem value="mst3">3</MenuItem>
+                        <MenuItem value="end-sem">4</MenuItem>
+                        <MenuItem value="end-sem">5</MenuItem>
+                        <MenuItem value="end-sem">6</MenuItem>
+                        <MenuItem value="end-sem">7</MenuItem>
+                        <MenuItem value="end-sem">8</MenuItem>
+                    </Select>
                 </Grid>
                 
                 <Grid item xs={12}>

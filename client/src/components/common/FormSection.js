@@ -26,10 +26,7 @@ export default function FormSection(props) {
     //console.log(props.resume[props.section])
     const [section, setSection] = useState(props.resume[props.section]);
     //console.log([...section])
-    const addSection = () => {
-        setSection([...section, { ...blankSection }]);
-        props.resume[props.section] = section;
-    };
+    
 
     const update = (updatedSection) => {
         setSection(updatedSection)
